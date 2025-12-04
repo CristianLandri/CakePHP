@@ -1,0 +1,590 @@
+﻿CakePhp  
+REF : https://book.cakephp.org/4/en/quickstart.html 
+Introduccion 
+CakePHP está diseñado para hacer que las tareas comunes de desarrollo web sean simples  y fáciles. Al proporcionar una caja de herramientas todo en uno para que pueda comenzar,  las diversas partes de CakePHP funcionan bien juntas o por separado.  
+El objetivo de esta descripción general es presentar los conceptos generales en CakePHP y  brindarle una descripción general rápida de cómo se implementan esos conceptos en  CakePHP. Si está ansioso por comenzar un proyecto, puede comenzar con el  tutorial o sumergirse en los documentos .  
+Convenciones sobre configuración  
+CakePHP proporciona una estructura organizativa básica que cubre nombres de clases,  nombres de archivos, nombres de tablas de bases de datos y otras convenciones. Si bien  las convenciones tardan un tiempo en aprenderse, al seguir las convenciones que  proporciona CakePHP puede evitar configuraciones innecesarias y crear una estructura de  aplicación uniforme que simplifique el trabajo con varios proyectos. El capítulo de  convenciones cubre las diversas convenciones que utiliza CakePHP.  
+La capa del modelo  
+La capa Modelo representa la parte de su aplicación que implementa la lógica  empresarial. Es responsable de recuperar datos y convertirlos en los principales conceptos  significativos de su aplicación. Esto incluye procesar, validar, asociar u otras tareas  relacionadas con el manejo de datos.  
+En el caso de una red social, la capa del modelo se encargaría de tareas como guardar los  datos del usuario, guardar las asociaciones de amigos, almacenar y recuperar fotos de los  usuarios, encontrar sugerencias para nuevos amigos, etc. Los objetos del modelo se pueden  considerar como “Amigo”, “Usuario”, “Comentario” o “Foto”. Si quisiéramos cargar algunos  datos de nuestra tabla users podríamos hacer:  
+use Cake\ORM\Locator\LocatorAwareTrait;  
+$users = $this->getTableLocator()->get('Users');  
+$resultset = $users->find()->all();  
+foreach ($resultset as $row) {  
+ echo $row->username;  
+}  
+Puede notar que no tuvimos que escribir ningún código antes de poder comenzar a trabajar  con nuestros datos. Mediante el uso de convenciones, CakePHP utilizará clases estándar  para tablas y clases de entidades que aún no se han definido.  
+Si quisiéramos crear un nuevo usuario y guardarlo (con validación) haríamos algo como: 
+use Cake\ORM\Locator\LocatorAwareTrait;  
+$users = $this->getTableLocator()->get('Users');  
+$user = $users->newEntity(['email' => 'mark@example.com']);  
+$users->save($user);  
+La capa de vista  
+La capa Vista representa una presentación de datos modelados. Al estar separado de los  objetos del modelo, es responsable de usar la información que tiene disponible para  producir cualquier interfaz de presentación que su aplicación pueda necesitar.  
+Por ejemplo, la vista podría usar datos del modelo para representar una plantilla de vista  HTML que la contenga, o un resultado con formato XML para que otros lo consuman:  
+// In a view template file, we'll render an 'element' for each user. 
+<?php foreach ($users as $user): ?> 
+ <li class="user">  
+ <?= $this->element('user_info', ['user' => $user]) ?> 
+ </li>  
+<?php endforeach; ?> 
+La capa Vista proporciona una serie de puntos de extensión como Plantillas de  vista , Elementos y Celdas de vista para permitirle reutilizar su lógica de presentación.  
+La capa Vista no solo se limita a HTML o representación de texto de los datos. Se puede  usar para entregar formatos de datos comunes como JSON, XML y, a través de una  arquitectura conectable, cualquier otro formato que pueda necesitar, como CSV.  
+La capa del controlador  
+La capa del controlador maneja las solicitudes de los usuarios. Es responsable de generar  una respuesta con la ayuda de las capas Model y View.  
+Un controlador puede verse como un administrador que garantiza que todos los recursos  necesarios para completar una tarea se deleguen a los trabajadores correctos. Espera las  peticiones de los clientes, verifica su validez de acuerdo con las reglas de autenticación o  autorización, delega la obtención o el procesamiento de datos al modelo, selecciona el tipo  de datos de presentación que aceptan los clientes y, finalmente, delega el proceso de  representación a la capa Vista. Un ejemplo de un controlador de registro de usuario sería:  
+public function add()  
+{  
+ $user = $this->Users->newEmptyEntity();  
+ if ($this->request->is('post')) {  
+ $user = $this->Users->patchEntity($user, $this->request->getData());  
+ if ($this->Users->save($user, ['validate' => 'registration'])) {  
+ $this->Flash->success(__('You are now registered.'));  
+ } else {  
+ $this->Flash->error(__('There were some problems.'));  
+ }  
+ }  
+ $this->set('user', $user);  
+} 
+Las convenciones de  
+Puede notar que nunca representamos explícitamente una vista. 
+Puede notar que nunca representamos explícitamente una vista. Las convenciones de  CakePHP se encargarán de seleccionar la vista correcta y representarla con los datos de 
+CakePHP se encargarán de seleccionar la vista correcta y representarla con los datos de 
+CakePHP se encargarán de seleccionar la vista correcta y representarla con los datos de vista que preparamos con set(). 
+Ciclo de petición de CakePHP 
+de CakePHP 
+Ahora que está familiarizado con las diferentes capas en CakePHP, revisemos cómo  Ahora que está familiarizado con las diferentes capas en CakePHP, revisemos cómo  
+Ahora que está familiarizado con las diferentes capas en CakePHP, revisemos cómo  funciona un ciclo de petición en CakePHP: 
+en CakePHP: 
+  
+  
+  
+  
+  
+  
+  
+  
+
+  
+  
+  
+
+  
+  
+
+  
+  
+
+solicitando una página o 
+El ciclo de petición típico de CakePHP comienza con un usuario  
+El ciclo de petición típico de CakePHP comienza con un usuario solicitando una página o recurso en tu aplicación. A un alto nivel cada petición sigue los siguientes pasos: 
+recurso en tu aplicación. A un alto nivel cada petición sigue los siguientes pasos: recurso en tu aplicación. A un alto nivel cada petición sigue los siguientes pasos: 
+webroot/index.php. 
+1. Las reglas de rescritura del servidor web envían la petición a 
+Las reglas de rescritura del servidor web envían la petición a webroot/index.php2. Tu aplicación es cargada y ligada a un 
+Tu aplicación es cargada y ligada a un HttpServer. 
+3. Se inicializa el middleware 
+de tu aplicación.  
+4. Una petición y respuesta son precesadas a través del 
+PSR-7 que tu  
+Una petición y respuesta son precesadas a través del Middleware PSR
+aplicación utiliza. Normalmente esto incluye la captura de errores y enrutamiento. aplicación utiliza. Normalmente esto incluye la captura de errores y enrutamiento. aplicación utiliza. Normalmente esto incluye la captura de errores y enrutamiento. 
+5. Si no recibe ninguna respuesta del 
+iene información de 
+Si no recibe ninguna respuesta del middleware y la petición contiene información de enrutamiento, se selecciona un controlador y una acción. 
+enrutamiento, se selecciona un controlador y una acción. La acción del controlador es ejecutada y el controlador interactúa con los Modelos y 
+6. La acción del controlador es ejecutada y el controlador interactúa con los Modelos y 
+La acción del controlador es ejecutada y el controlador interactúa con los Modelos y Componentes necesarios.  
+7. El controlador delega la creación de la respuesta a la Vista para gene
+rar la salida a  
+El controlador delega la creación de la respuesta a la Vista para generar la salida a  partir de los datos del modelo. 
+partir de los datos del modelo. 
+para generar el cuerpo y las cabeceras de la respuesta.
+8. La vista utiliza Helpers y Cells 
+Cells para generar el cuerpo y las cabeceras de la respuesta.
+9. La respuesta es devuelta a través del 
+La respuesta es devuelta a través del Middleware. 
+10. El HttpServer envía la respuesta al servidor web. 
+envía la respuesta al servidor web. 
+Esto es solo el comienzo  
+Ojalá este repaso rápido haya despertado tu curiosidad. Otras funcionalidades geniales  de CakePHP son:  
+ Un framework para caché que se integra con Memcached, Redis y otros métodos de  caché.  
+ Poderosas herramientas de generación de código para que puedas comenzar  inmediatamente.  
+ Framework para la ejecución de pruebas integrado para que puedas asegurarte de  que tu código funciona perfectamente.  
+Requisitos Del Servidor 
+CakePHP tiene algunos requisitos del sistema:  
+ Servidor HTTP. Por ejemplo: apache. Se prefiere tener mod_rewrite, pero de ninguna  manera es obligatorio. También puede usar nginx o Microsoft IIS si lo prefiere.   Mínimo PHP 7.2 ( compatible con 8.1 ). 
+ Extensión PHP mbstring , intl  
+ Extensión PHP internacional  
+ Extensión PHP SimpleXML  
+ Extensión PHP PDO  
+1. Un servidor de base de datos. Vamos a utilizar el servidor MySQL en esta  guia. Necesitará saber lo suficiente sobre SQL para crear una base de datos y  ejecutar fragmentos de SQL. CakePHP se encargará de crear todas las consultas  que necesita su aplicación. Como estamos usando MySQL, también asegúrese de  haberlo pdo_mysql habilitado en PHP.  
+Antes de comenzar, debe asegurarse de tener una versión actualizada de PHP:  php -v 
+Al menos debería tener instalado PHP 7.2 (CLI) o superior. La versión de PHP de su  servidor web también debe ser de 7.2 o superior, y debe ser la misma versión que su  interfaz de línea de comandos (CLI) de PHP. 
+En XAMPP, se incluye la extensión intl, pero debe  
+descomentar extension=php_intl.dll(o extension=intl) en php.ini y reiniciar el  servidor a través del Panel de control de XAMPP.  
+En WAMP, la extensión intl está "activada" de forma predeterminada pero no funciona. Para  que funcione, debe ir a la carpeta php (por defecto) C:\wamp\bin\php\php{version} ,  copiar todos los archivos que se parecen a icu*.dll y pegarlos en el directorio bin de  apache C: \wamp\bin\apache\apache{versión}\bin . Luego reinicie todos los servicios y  debería estar bien.
+	
+
+
+
+Instalación con Composer 
+La forma más fácil de instalar CakePHP es usar Composer. Composer es una forma sencilla  de instalar CakePHP desde su terminal o línea de comandos. Primero, deberá descargar e  instalar Composer si aún no lo ha hecho. Si tiene cURL instalado, ejecute lo siguiente:  
+curl -s https://getcomposer.org/installer | php 
+O bien, puede descargarlo composer.phar desde el sitio web de Composer .  
+Luego, simplemente escriba la siguiente línea en su terminal desde su directorio de  instalación para instalar el esqueleto de la aplicación CakePHP en el directorio cms del  directorio de trabajo actual:  
+Composer create-project --prefer-dist cakephp/app:~4.0 cms 
+La ventaja de usar Composer es que automáticamente completará algunas tareas de  configuración importantes, como configurar los permisos de archivo correctos y crear su  archivo config/app.php para usted.  
+Hay otras formas de instalar CakePHP. Si no puede o no quiere usar Composer, consulte la  sección Instalación .  
+Independientemente de cómo descargó e instaló CakePHP, una vez que se complete la  configuración, la configuración de su directorio debería ser similar a la siguiente:  
+/cms 
+ /bin 
+ /config 
+ /logs 
+ /plugins 
+ /resources 
+ /src 
+ /templates 
+ /tests 
+ /tmp 
+ /vendor 
+ /webroot 
+ .editorconfig 
+ .gitignore 
+ .htaccess 
+ .travis.yml 
+ composer.json 
+ index.php 
+ phpunit.xml.dist 
+ README.md
+Ahora podría ser un buen momento para aprender un poco sobre cómo funciona la  estructura de directorios de CakePHP: consulte la estructura de carpetas de  CakePHP sección  
+Si se pierde durante este tutorial, puede ver el resultado final en GitHub .  
+Comprobando nuestra instalación  
+Podemos comprobar rápidamente que nuestra instalación es correcta, consultando la página  de inicio predeterminada. Antes de que pueda hacer eso, deberá iniciar el servidor de  desarrollo:  
+cd /path/to/our/app 
+bin/cake server 
+Para Windows, el comando debe ser (tenga en cuenta la barra invertida).bin\cake server Esto iniciará el servidor web incorporado de PHP en el puerto 8765.  
+Abra http://localhost:8765 en su navegador web para ver la página de bienvenida. Todos  los puntos deben ser sombreros de chef verdes que no sean CakePHP que puedan  conectarse a su base de datos. De lo contrario, es posible que deba instalar extensiones de  PHP adicionales o establecer permisos de directorio.  
+Instalación manual 
+permisos 
+CakePHP usa el directorio tmp para varias operaciones diferentes. Las descripciones del  modelo, las vistas en caché y la información de la sesión son algunos ejemplos. El directorio  de registros se utiliza para escribir archivos de registro por el motor FileLog predeterminado.  
+Como tal, asegúrese de que el usuario del servidor web pueda escribir en los  directorios logs , tmp y todos sus subdirectorios en su instalación de CakePHP. El  proceso de instalación de Composer hace que tmp y sus subcarpetas se puedan escribir  globalmente para que las cosas funcionen rápidamente, pero puede actualizar los permisos  para una mayor seguridad y mantenerlos solo para el usuario del servidor web.  
+Un problema común es que los directorios y subdirectorios logs y tmp deben ser  escribibles tanto por el servidor web como por el usuario de la línea de comandos. En  un sistema UNIX, si el usuario de su servidor web es diferente de su usuario de línea de  comandos, puede ejecutar los siguientes comandos desde el directorio de su aplicación solo  una vez en su proyecto para asegurarse de que los permisos se configurarán correctamente: 
+HTTPDUSER=`ps aux | grep -E '[a]pache|[h]ttpd|[_]www|[w]ww-data|[n]ginx' | grep -v root |  head -1 | cut -d\ -f1` 
+setfacl -R -m u:${HTTPDUSER}:rwx tmp 
+setfacl -R -d -m u:${HTTPDUSER}:rwx tmp 
+setfacl -R -m u:${HTTPDUSER}:rwx logs 
+setfacl -R -d -m u:${HTTPDUSER}:rwx logs  
+Para utilizar las herramientas de la consola de CakePHP, debe asegurarse de que bin/cake  el archivo sea ejecutable. En *nix o macOS, puede ejecutar:  
+chmod +x bin/cake 
+En Windows, el archivo .bat ya debería ser ejecutable. Si está utilizando un Vagrant o  cualquier otro entorno virtualizado, todos los directorios compartidos deben compartirse con  permisos de ejecución (consulte la documentación de su entorno virtualizado sobre cómo  hacerlo).  
+Si, por cualquier motivo, no puede cambiar los permisos del bin/cake archivo, puede ejecutar  la consola de CakePHP con:  
+php bin/cake.php 
+Servidor de desarrollo 
+Una instalación de desarrollo es la forma más rápida de configurar CakePHP. En este  ejemplo, usamos la consola de CakePHP para ejecutar el servidor web incorporado de PHP  que hará que su aplicación esté disponible en http://host:port . Desde el directorio de la  aplicación, ejecute:  
+bin/cake server 
+De forma predeterminada, sin ningún argumento provisto, esto servirá su aplicación  en http://localhost:8765/ .  
+Si hay un conflicto con el host local o el puerto 8765, puede decirle a la consola de  CakePHP que ejecute el servidor web en un host y/o puerto específico utilizando los  siguientes argumentos:  
+bin/cake server -H 192.168.13.37 -p 5673 
+Esto servirá para su aplicación en http://192.168.13.37:5673/ .  
+¡Eso es todo! Su aplicación CakePHP está en funcionamiento sin tener que configurar un  servidor web.  
+Pruebe si no se puede acceder al servidor desde otros hosts.bin/cake server -H 0.0.0.0 El servidor de desarrollo nunca debe usarse en un entorno de producción. Solo está  diseñado como un servidor de desarrollo básico.  
+Si prefiere usar un servidor web real, debería poder mover su instalación de CakePHP  (incluidos los archivos ocultos) dentro de la raíz del documento de su servidor web. Entonces  debería poder apuntar su navegador web al directorio al que movió los archivos y ver su  aplicación en acción. 
+Producción 
+Una instalación de producción es una forma más flexible de configurar CakePHP. El uso de  este método permite que un dominio completo actúe como una sola aplicación  CakePHP. Este ejemplo lo ayudará a instalar CakePHP en cualquier lugar de su sistema de  archivos y lo hará disponible en http://www.example.com . Tenga en cuenta que esta  instalación puede requerir los derechos para cambiar los DocumentRoot servidores web  Apache.  
+Después de instalar su aplicación utilizando uno de los métodos anteriores en el directorio  de su elección, supondremos que eligió /cake_install, su configuración de producción se verá  así en el sistema de archivos:  
+/cake_install/ 
+ bin/ 
+ config/ 
+ logs/ 
+ plugins/ 
+ resources/ 
+ src/ 
+ templates/ 
+ tests/ 
+ tmp/ 
+ vendor/ 
+ webroot/ (this directory is set as DocumentRoot)  
+ .gitignore 
+ .htaccess 
+ .travis.yml 
+ composer.json 
+ index.php 
+ phpunit.xml.dist 
+ README.md 
+Los desarrolladores que usan Apache deben establecer la directiva DocumentRoot para el  dominio para:  
+DocumentRoot /cake_install/webroot 
+Si su servidor web está configurado correctamente, ahora debería encontrar su aplicación  CakePHP accesible en http://www.example.com .  
+Préndelo - Ejecutando tu aplicación 
+Muy bien, veamos CakePHP en acción. Según la configuración que haya utilizado, debe  dirigir su navegador a http://example.com/ o http://localhost:8765/ . En este punto, se le  presentará la página de inicio predeterminada de CakePHP y un mensaje que le indicará el  estado de su conexión actual a la base de datos.  
+¡Felicidades! Estás listo para crear tu primera aplicación CakePHP
+Tutorial CMS - Creación de la base de datos 
+Ahora que tenemos CakePHP instalado, configuremos la base de datos para nuestra  aplicación CMS . Si aún no lo ha hecho, cree una base de datos vacía para usar en este  tutorial, con el nombre que elija, como cake_cms. Si está utilizando MySQL/MariaDB,  puede ejecutar el siguiente SQL para crear las tablas necesarias:  
+USE cake_cms;  
+CREATE TABLE users (  
+ id INT AUTO_INCREMENT PRIMARY KEY,  
+ email VARCHAR(255) NOT NULL,  
+ password VARCHAR(255) NOT NULL,  
+ created DATETIME,  
+ modified DATETIME  
+);  
+CREATE TABLE articles (  
+ id INT AUTO_INCREMENT PRIMARY KEY,  
+ user_id INT NOT NULL,  
+ title VARCHAR(255) NOT NULL,  
+ slug VARCHAR(191) NOT NULL,  
+ body TEXT,  
+ published BOOLEAN DEFAULT FALSE,  
+ created DATETIME,  
+ modified DATETIME,  
+ UNIQUE KEY (slug),  
+ FOREIGN KEY user_key (user_id) REFERENCES users(id)  
+) CHARSET=utf8mb4;  
+CREATE TABLE tags (  
+ id INT AUTO_INCREMENT PRIMARY KEY,  
+ title VARCHAR(191),  
+ created DATETIME,  
+ modified DATETIME,  
+ UNIQUE KEY (title)  
+) CHARSET=utf8mb4;  
+CREATE TABLE articles_tags (  
+ article_id INT NOT NULL,  
+ tag_id INT NOT NULL,  
+ PRIMARY KEY (article_id, tag_id),  
+ FOREIGN KEY tag_key(tag_id) REFERENCES tags(id),  
+ FOREIGN KEY article_key(article_id) REFERENCES articles(id)  
+);  
+INSERT INTO users (email, password, created, modified)  
+VALUES 
+('cakephp@example.com', 'secret', NOW(), NOW());  
+INSERT INTO articles (user_id, title, slug, body, published, created, modified)  VALUES 
+(1, 'First Post', 'first-post', 'This is the first post.', 1, NOW(), NOW());  
+Es posible que haya notado que la tabla articles_tags utiliza una clave primaria compuesta.  CakePHP admite claves primarias compuestas en casi todas partes, lo que le permite tener  esquemas más simples que no requieren columnas id adicionales. 
+Los nombres de tabla y columna que usamos no fueron arbitrarios. Al usar las convenciones  de nomenclatura de CakePHP, podemos aprovechar CakePHP más eficazmente y evitar la  necesidad de configurar el framework. Si bien CakePHP es lo suficientemente flexible para  adaptarse a casi cualquier esquema de base de datos, adherirse a las convenciones le  ahorrará tiempo, ya que puede aprovechar los valores predeterminados basados en  convenciones que ofrece CakePHP.  
+Configuración de la base de datos  
+A continuación, digamos a CakePHP dónde está nuestra base de datos y cómo conectarse a  ella. Reemplace los valores en el arreglo Datasources.default en su archivo config/app.php con los que aplican a su configuración. Una arreglo de configuración completo de muestra  podría tener el siguiente aspecto:  
+<?php  
+return [  
+ // Más configuración arriba.  
+ 'Datasources' => [  
+ 'default' => [  
+ 'className' => 'Cake\Database\Connection',  
+ // Replace Mysql with Postgres if you are using PostgreSQL   'driver' => 'Cake\Database\Driver\Mysql',  
+ 'persistent' => false,  
+ 'host' => 'localhost',  
+ 'username' => 'cakephp',  
+ 'password' => 'AngelF00dC4k3~',  
+ 'database' => 'cake_cms',  
+ // Comment out the line below if you are using PostgreSQL   'encoding' => 'utf8mb4',  
+ 'timezone' => 'UTC',  
+ 'cacheMetadata' => true,  
+ ],  
+ ],  
+ // Más configuración abajo.  
+];  
+Una vez que haya guardado su archivo config/app.php, debería ver que la sección  “CakePHP is able to connect to the database” tiene un gorro de cocinero verde.  
+Si tiene config/app_local.php en la carpeta de su aplicación, este anula la configuración de  app.php.  
+Creando nuestro primer modelo  
+Los modelos son el corazón de las aplicaciones CakePHP. Nos permiten leer y modificar  nuestros datos. Nos permiten construir relaciones entre nuestros datos, validarlos y aplicar  reglas de aplicación. Los modelos construyen las bases necesarias para construir nuestras  acciones y plantillas del controlador.  
+Los modelos de CakePHP se componen de objetos Table y Entity. Los objetos Table brindan  acceso a la colección de entidades almacenadas en una tabla específica. Se almacenan en  src/Model/Table. El archivo que crearemos se guardará en  
+src/Model/Table/ArticlesTable.php. El archivo completo debería verse así:  
+<?php  
+// src/Model/Table/ArticlesTable.php 
+namespace App\Model\Table;  
+use Cake\ORM\Table;  
+class ArticlesTable extends Table  
+{  
+ public function initialize(array $config): void  
+ {  
+ $this->addBehavior('Timestamp');  
+ }  
+}  
+Hemos agregado el comportamiento Timestamp Behavior que automáticamente llenará las  columnas created y modified de nuestra tabla. Al nombrar nuestro objeto Table  ArticlesTable, CakePHP puede usar convenciones de nomenclatura para saber que nuestro  modelo usa la tabla articles` de la base de datos. CakePHP también usa convenciones para  saber que la columna id es la clave primaria de nuestra tabla.  
+CakePHP creará dinámicamente un objeto modelo para usted si no puede encontrar un  archivo correspondiente en src/Model/Table. Esto también significa que si accidentalmente  asigna un nombre incorrecto a su archivo (es decir, articlestable.php o ArticleTable.php),  CakePHP no reconocerá ninguna de sus configuraciones y utilizará el modelo generado en  su lugar.  
+También crearemos una clase Entity para nuestros artículos. Las Entity representan un solo  registro en la base de datos y proporcionan un comportamiento a nivel de fila para nuestros  datos. Nuestra Entity se guardará en src/Model/Entity/Article.php. El archivo completo  debería verse así:  
+<?php  
+// src/Model/Entity/Article.php  
+namespace App\Model\Entity;  
+use Cake\ORM\Entity;  
+class Article extends Entity  
+{  
+ protected $_accessible = [  
+ '*' => true,  
+ 'id' => false,  
+ 'slug' => false,  
+ ];  
+}  
+Nuestra entidad es bastante delgada en este momento, y solo hemos configurado la  propiedad _accessible que controla cómo las propiedades pueden ser modificadas por  entities-mass-assignment.  
+No podemos hacer mucho con nuestros modelos en este momento, así que a continuación  crearemos nuestro primer Controller y Template </tutorials-and-examples/cms/articles controller> para permitirnos interactuar con nuestro modelo.  
+Tutorial CMS - Creación del controlador de artículos  
+Con nuestro modelo creado, necesitamos un controlador para nuestros artículos. Los  controladores en CakePHP manejan las solicitudes HTTP y ejecutan la lógica comercial 
+contenida en los métodos del modelo para preparar la respuesta. Colocaremos este nuevo  controlador en un archivo llamado ArticlesController.php dentro del  
+directorio src/Controller . Así es como debería verse el controlador básico:  
+<?php 
+// src/Controller/ArticlesController.php 
+namespace App\Controller;  
+class ArticlesController extends AppController 
+{  
+}  
+Ahora, agreguemos una acción a nuestro controlador. Las acciones son métodos de  controlador que tienen rutas conectadas a ellos. Por ejemplo, cuando un usuario  solicita www.example.com/articles/index (que también es lo mismo  
+que www.example.com/articles ), CakePHP llamará al método index de  su ArticlesController. Este método debe consultar la capa del modelo y preparar una  respuesta representando una Plantilla en la Vista. El código para esa acción se vería así:  
+<?php 
+// src/Controller/ArticlesController.php 
+namespace App\Controller;  
+class ArticlesController extends AppController 
+{  
+ public function index()  
+ {  
+ $this->loadComponent('Paginator');  
+ $articles = $this->Paginator->paginate($this->Articles->find());   $this->set(compact('articles'));  
+ }  
+}  
+Al definir la función index() en nuestro ArticlesController, los usuarios ahora pueden acceder  a la lógica allí solicitando www.example.com/articles/index . De manera similar, si  tuviéramos que definir una función llamada foobar(), los usuarios podrían acceder a ella  en www.example.com/articles/foobar . Puede sentirse tentado a nombrar sus  controladores y acciones de una manera que le permita obtener direcciones URL  específicas. Resiste esa tentación. En su lugar, siga las convenciones de CakePHP creando  nombres de acción legibles y significativos. A continuación, puede utilizar  el enrutamiento para conectar las direcciones URL que desee con las acciones que ha  creado.  
+La acción de nuestro controlador es muy simple. Obtiene un conjunto paginado de artículos  de la base de datos, utilizando el modelo de artículos que se carga automáticamente a  través de convenciones de nomenclatura. Luego usa set()para pasar los artículos a la  plantilla (que crearemos pronto). CakePHP renderizará automáticamente la plantilla después  de que se complete la acción de nuestro controlador.  
+Crear la plantilla de lista de artículos  
+Ahora que nuestro controlador extrae datos del modelo y prepara nuestro contexto de vista,  creemos una plantilla de vista para nuestra acción de índice. 
+Las plantillas de vista de CakePHP son código PHP con sabor a presentación que se inserta  dentro del diseño de la aplicación. Si bien crearemos HTML aquí, Views también puede  generar archivos JSON, CSV o incluso binarios como PDF.  
+Un diseño es un código de presentación que se envuelve alrededor de una vista. Los  archivos de diseño contienen elementos comunes del sitio, como encabezados, pies de  página y elementos de navegación. Su aplicación puede tener varios diseños y puede  cambiar entre ellos, pero por ahora, usemos el diseño predeterminado.  
+Los archivos de plantilla de CakePHP se almacenan en templates dentro de una carpeta  con el nombre del controlador al que corresponden. Así que tendremos que crear una  carpeta llamada 'Artículos' en este caso. Agregue el siguiente código a su aplicación:  
+<!-- File: templates/Articles/index.php -->  
+<h1>Articles</h1>  
+<table>  
+ <tr>  
+ <th>Title</th>  
+ <th>Created</th>  
+ </tr>  
+ <!-- Here is where we iterate through our $articles query object, printing out article  info -->  
+ <?php foreach ($articles as $article): ?> 
+ <tr>  
+ <td>  
+ <?= $this->Html->link($article->title, ['action' => 'view', $article->slug])  ?> 
+ </td>  
+ <td>  
+ <?= $article->created->format(DATE_RFC850) ?> 
+ </td>  
+ </tr>  
+ <?php endforeach; ?> 
+</table>  
+En la última sección asignamos la variable 'artículos' a la vista usando set(). Las variables  pasadas a la vista están disponibles en las plantillas de vista como variables locales que  usamos en el código anterior.  
+Es posible que haya notado el uso de un objeto llamado $this->Html. Esta es una instancia  de CakePHP HtmlHelper . CakePHP viene con un conjunto de ayudantes de vista que  realizan tareas como crear enlaces, formularios y botones de paginación. Puede obtener  más información sobre los ayudantes en su capítulo, pero lo que es importante tener en  cuenta aquí es que el método link() generará un enlace HTML con el texto del enlace dado  (el primer parámetro) y la URL (el segundo parámetro).  
+Al especificar URL en CakePHP, se recomienda que utilice matrices o rutas con  nombre . Estas sintaxis le permiten aprovechar las funciones de enrutamiento inverso que  ofrece CakePHP. 
+En este punto, debería poder apuntar su navegador  
+a http://localhost:8765/articles/index . Debería ver su vista de lista, correctamente  formateada con el título y la lista de tablas de los artículos.  
+Crear la acción de vista  
+Si hiciera clic en uno de los enlaces 'ver' en nuestra página de lista de artículos, vería una  página de error que dice que la acción no se ha implementado. Arreglemos eso ahora:  
+// Add to existing src/Controller/ArticlesController.php file 
+public function view($slug = null)  
+{  
+ $article = $this->Articles->findBySlug($slug)->firstOrFail();  
+ $this->set(compact('article'));  
+}  
+Si bien esta es una acción simple, hemos utilizado algunas funciones potentes de  CakePHP. Comenzamos nuestra acción usando findBySlug() cuál es un buscador  dinámico . Este método nos permite crear una consulta básica que encuentra artículos por  un slug dado. Luego usamos firstOrFail() para buscar el primer registro o lanzar un  archivo NotFoundException.  
+Nuestra acción toma un $slugparámetro, pero ¿de dónde viene ese parámetro? Si un  usuario solicita /articles/view/first-post, entonces el valor 'first-post' se pasa como $slugpor  las capas de enrutamiento y despacho de CakePHP. Si recargamos nuestro navegador con  nuestra nueva acción guardada, veremos otra página de error de CakePHP diciéndonos que  nos falta una plantilla de vista; arreglemos eso.  
+Crear la plantilla de vista  
+Vamos a crear la vista para nuestra nueva acción 'ver' y colocarla  
+en templates/Articles/view.php 
+<!-- File: templates/Articles/view.php -->  
+<h1><?= h($article->title) ?></h1>  
+<p><?= h($article->body) ?></p>  
+<p><small>Created: <?= $article->created->format(DATE_RFC850) ?></small></p>  <p><?= $this->Html->link('Edit', ['action' => 'edit', $article->slug]) ?></p>  
+Puede verificar que esto funciona probando los enlaces en /articles/index o solicitando  manualmente un artículo accediendo a URL como /articles/view/first-post.  
+Adición de artículos  
+Con las vistas de lectura básicas creadas, necesitamos hacer posible la creación de nuevos  artículos. Comience creando una add()acción en el archivo ArticlesController. Nuestro  controlador ahora debería verse así: 
+<?php 
+// src/Controller/ArticlesController.php 
+namespace App\Controller;  
+use App\Controller\AppController;  
+class ArticlesController extends AppController 
+{  
+ public function initialize(): void 
+ {  
+ parent::initialize();  
+ $this->loadComponent('Paginator');  
+ $this->loadComponent('Flash'); // Include the FlashComponent  }  
+ public function index()  
+ {  
+ $articles = $this->Paginator->paginate($this->Articles->find());   $this->set(compact('articles'));  
+ }  
+ public function view($slug)  
+ {  
+ $article = $this->Articles->findBySlug($slug)->firstOrFail();   $this->set(compact('article'));  
+ }  
+ public function add()  
+ {  
+ $article = $this->Articles->newEmptyEntity();  
+ if ($this->request->is('post')) {  
+ $article = $this->Articles->patchEntity($article, $this->request->getData());  
+ // Hardcoding the user_id is temporary, and will be removed later  // when we build authentication out. 
+ $article->user_id = 1;  
+ if ($this->Articles->save($article)) {  
+ $this->Flash->success(__('Your article has been saved.'));   return $this->redirect(['action' => 'index']);  
+ }  
+ $this->Flash->error(__('Unable to add your article.'));   }  
+ $this->set('article', $article);  
+ }  
+}  
+Debe incluir el componente Flash en cualquier controlador donde lo usará. A menudo tiene  sentido incluirlo en su archivo AppController.  
+Esto es lo que add()hace la acción:  
+ Si el método HTTP de la solicitud fue POST, intente guardar los datos usando el modelo  Articles.  
+ Si por alguna razón no se guarda, simplemente represente la vista. Esto nos da la  oportunidad de mostrar al usuario errores de validación u otras advertencias.  Cada solicitud de CakePHP incluye un objeto de solicitud al que se puede acceder  mediante $this->request. El objeto de solicitud contiene información sobre la solicitud que se  acaba de recibir. Usamos el Cake\Http\ServerRequest::is()método para verificar que la  solicitud sea una solicitud HTTP POST. 
+Nuestros datos POST están disponibles en formato $this->request->getData(). Puede usar  las funciones pr()o debug()para imprimirlo si desea ver cómo se ve. Para guardar nuestros  datos, primero 'agrupamos' los datos POST en una entidad de artículo. Luego, la Entidad  persiste utilizando la Tabla Articles que creamos anteriormente.  
+Después de guardar nuestro nuevo artículo, usamos el método success() de  FlashComponent para configurar un mensaje en la sesión. El método success se  proporciona utilizando las características del método mágico de PHP . Los mensajes flash se  mostrarán en la página siguiente después de la redirección. En nuestro diseño tenemos que  muestra mensajes flash y borra la variable de sesión correspondiente. Finalmente, una vez  que se completa el guardado, usamos para enviar al usuario de regreso a la lista de  artículos. El parámetro se traduce a URL , es decir, la acción de índice del archivo . Puede  consultar la función en la API para ver los formatos en los que puede especificar una URL  para varias funciones de CakePHP.  
+<?= $this->Flash- 
+>render() ?>Cake\Controller\Controller::redirect['action' => 'index']/articles ArticlesControllerCake\Routing\Router::url() 
+Crear plantilla Agregar  
+Aquí está nuestra plantilla de agregar vista:  
+<!-- File: templates/Articles/add.php -->  
+<h1>Add Article</h1>  
+<?php 
+ echo $this->Form->create($article);  
+ // Hard code the user for now. 
+ echo $this->Form->control('user_id', ['type' => 'hidden', 'value' => 1]);   echo $this->Form->control('title');  
+ echo $this->Form->control('body', ['rows' => '3']);  
+ echo $this->Form->button(__('Save Article'));  
+ echo $this->Form->end();  
+?> 
+Usamos FormHelper para generar la etiqueta de apertura de un formulario HTML. Aquí está  el HTML que genera: $this->Form->create()  
+<form method="post" action="/articles/add">  
+Debido a que llamamos create() sin una opción de URL, FormHelper se supone que  queremos que el formulario se envíe de nuevo a la acción actual.  
+El método $this->Form->control() se utiliza para crear elementos de formulario con el mismo  nombre. El primer parámetro le dice a CakePHP a qué campo corresponden, y el segundo  parámetro le permite especificar una amplia gama de opciones, en este caso, el número de  filas para el área de texto. Hay un poco de introspección y convenciones utilizadas  aquí. El control() generará diferentes elementos de formulario basados en el campo de  modelo especificado y usará la inflexión para generar el texto de la etiqueta. Puede  personalizar la etiqueta, la entrada o cualquier otro aspecto de los controles del formulario  usando opciones. La llamada $this->Form->end() cierra el formulario. 
+Ahora regresemos y actualicemos nuestra vista templates/Articles/index.php para incluir  un nuevo enlace "Agregar artículo". Antes de <table>, agregue la siguiente línea:  
+<?= $this->Html->link('Add Article', ['action' => 'add']) ?> 
+Agregar generación de slug simple  
+Si tuviéramos que guardar un artículo en este momento, el guardado fallaría porque no  estamos creando un atributo de slug y la columna es . Los valores de slug suelen ser una  versión segura de URL del título de un artículo. Podemos usar la devolución de llamada  beforeSave() del ORM para completar nuestro slug:NOT NULL 
+<?php 
+// in src/Model/Table/ArticlesTable.php 
+namespace App\Model\Table;  
+use Cake\ORM\Table;  
+// the Text class 
+use Cake\Utility\Text;  
+// the EventInterface class 
+use Cake\Event\EventInterface;  
+// Add the following method. 
+public function beforeSave(EventInterface $event, $entity, $options)  {  
+ if ($entity->isNew() && !$entity->slug) {  
+ $sluggedTitle = Text::slug($entity->title);  
+ // trim slug to maximum length defined in schema 
+ $entity->slug = substr($sluggedTitle, 0, 191);  
+ }  
+}  
+Este código es simple y no tiene en cuenta los slugs duplicados. Pero lo arreglaremos más  adelante.  
+Agregar acción de edición  
+Nuestra aplicación ahora puede guardar artículos, pero no podemos editarlos. Rectifiquemos  eso ahora. Agregue la siguiente acción a su ArticlesController:  
+// in src/Controller/ArticlesController.php 
+// Add the following method. 
+public function edit($slug)  
+{  
+ $article = $this->Articles 
+ ->findBySlug($slug)  
+ ->firstOrFail();  
+ if ($this->request->is(['post', 'put'])) {  
+ $this->Articles->patchEntity($article, $this->request->getData());   if ($this->Articles->save($article)) {  
+ $this->Flash->success(__('Your article has been updated.'));   return $this->redirect(['action' => 'index']); 
+ }  
+ $this->Flash->error(__('Unable to update your article.'));  
+ }  
+ $this->set('article', $article);  
+}  
+Esta acción primero asegura que el usuario ha intentado acceder a un registro existente. Si  no han pasado un parámetro $slug, o el artículo no existe, se lanzará una  NotFoundException y CakePHP mostrará la página de error apropiada ErrorHandler.  
+A continuación, la acción comprueba si la solicitud es una solicitud POST o PUT. Si es así,  usamos los datos POST/PUT para actualizar la entidad de nuestro artículo usando el método patchEntity(). Finalmente, llamamos save(), configuramos el mensaje flash apropiado y  redireccionamos o mostramos errores de validación.  
+Crear editar plantilla  
+La plantilla de edición debería verse así:  
+<!-- File: templates/Articles/edit.php -->  
+<h1>Edit Article</h1>  
+<?php 
+ echo $this->Form->create($article);  
+ echo $this->Form->control('user_id', ['type' => 'hidden']);  
+ echo $this->Form->control('title');  
+ echo $this->Form->control('body', ['rows' => '3']);  
+ echo $this->Form->button(__('Save Article'));  
+ echo $this->Form->end();  
+?> 
+Esta plantilla genera el formulario de edición (con los valores completados), junto con los  mensajes de error de validación necesarios.  
+Ahora puede actualizar su vista de índice con enlaces para editar artículos específicos:  <!-- File: templates/Articles/index.php (edit links added) -->  
+<h1>Articles</h1>  
+<p><?= $this->Html->link("Add Article", ['action' => 'add']) ?></p>  
+<table>  
+ <tr>  
+ <th>Title</th>  
+ <th>Created</th>  
+ <th>Action</th>  
+ </tr>  
+<!-- Here's where we iterate through our $articles query object, printing out article info  -->  
+<?php foreach ($articles as $article): ?> 
+ <tr>  
+ <td>  
+ <?= $this->Html->link($article->title, ['action' => 'view', $article->slug])  ?> 
+ </td>  
+ <td>  
+ <?= $article->created->format(DATE_RFC850) ?>
+ </td>  
+ <td>  
+ <?= $this->Html->link('Edit', ['action' => 'edit', $article->slug]) ?>  </td>  
+ </tr>  
+<?php endforeach; ?> 
+</table>  
+Actualizar reglas de validación para artículos  
+Hasta este punto, nuestros artículos no tenían ninguna validación de entrada  realizada. Arreglemos eso usando un validador :  
+// src/Model/Table/ArticlesTable.php 
+// add this use statement right below the namespace declaration to import // the Validator class 
+use Cake\Validation\Validator;  
+// Add the following method. 
+public function validationDefault(Validator $validator): Validator 
+{  
+ $validator 
+ ->notEmptyString('title')  
+ ->minLength('title', 10)  
+ ->maxLength('title', 255)  
+ ->notEmptyString('body')  
+ ->minLength('body', 10);  
+ return $validator;  
+}  
+El método validationDefault() le dice a CakePHP cómo validar sus datos cuando se llama al  método save(). Aquí, hemos especificado que tanto el título como los campos del cuerpo no  deben estar vacíos y tienen ciertas restricciones de longitud.  
+El motor de validación de CakePHP es potente y flexible. Proporciona un conjunto de reglas  de uso frecuente para tareas como direcciones de correo electrónico, direcciones IP, etc. y la  flexibilidad para agregar sus propias reglas de validación. Para obtener más información  sobre esa configuración, consulte la documentación de Validación .  
+Ahora que sus reglas de validación están implementadas, use la aplicación para intentar  agregar un artículo con un título o cuerpo vacío para ver cómo funciona. Dado que hemos  utilizado el Cake\View\Helper\FormHelper::control()método de FormHelper para crear  nuestros elementos de formulario, nuestros mensajes de error de validación se mostrarán  automáticamente.  
+Agregar acción de eliminación  
+A continuación, hagamos una forma para que los usuarios eliminen artículos. Comience con  una delete()acción en el ArticlesController:  
+// src/Controller/ArticlesController.php
+// Add the following method. 
+public function delete($slug)  
+{  
+ $this->request->allowMethod(['post', 'delete']);  
+ $article = $this->Articles->findBySlug($slug)->firstOrFail();  
+ if ($this->Articles->delete($article)) {  
+ $this->Flash->success(__('The {0} article has been deleted.', $article->title));   return $this->redirect(['action' => 'index']);  
+ }  
+}  
+Esta lógica elimina el artículo especificado por $slug y utiliza $this->Flash->success()para  mostrar al usuario un mensaje de confirmación después de redirigirlo a /articles. Si el usuario  intenta eliminar un artículo mediante una solicitud GET, allowMethod()generará una  excepción. Las excepciones no detectadas son capturadas por el controlador de  excepciones de CakePHP y se muestra una bonita página de error. Hay  muchas excepciones integradas que se pueden usar para indicar los diversos errores HTTP  que su aplicación podría necesitar generar.  
+Permitir que se elimine contenido mediante solicitudes GET es muy peligroso, ya que los  rastreadores web podrían eliminar accidentalmente todo su contenido. Es por eso que  usamos allowMethod()en nuestro controlador.  
+Debido a que solo estamos ejecutando la lógica y redirigiendo a otra acción, esta acción no  tiene plantilla. Es posible que desee actualizar su plantilla de índice con enlaces que  permitan a los usuarios eliminar artículos:  
+<!-- File: templates/Articles/index.php (delete links added) -->  
+<h1>Articles</h1>  
+<p><?= $this->Html->link("Add Article", ['action' => 'add']) ?></p>  
+<table>  
+ <tr>  
+ <th>Title</th>  
+ <th>Created</th>  
+ <th>Action</th>  
+ </tr>  
+<!-- Here's where we iterate through our $articles query object, printing out article info  -->  
+<?php foreach ($articles as $article): ?> 
+ <tr>  
+ <td>  
+ <?= $this->Html->link($article->title, ['action' => 'view', $article->slug])  ?> 
+ </td>  
+ <td>  
+ <?= $article->created->format(DATE_RFC850) ?> 
+ </td>  
+ <td>  
+ <?= $this->Html->link('Edit', ['action' => 'edit', $article->slug]) ?>  <?= $this->Form->postLink(  
+ 'Delete',  
+ ['action' => 'delete', $article->slug],  
+ ['confirm' => 'Are you sure?'])  
+ ?> 
+ </td>  
+ </tr> 
+<?php endforeach; ?> 
+</table>  
+El uso View\Helper\FormHelper::postLink()creará un enlace que usa JavaScript para realizar  una solicitud POST eliminando nuestro artículo.  
+Este código de vista también utiliza FormHelper para solicitar al usuario un cuadro de  diálogo de confirmación de JavaScript antes de intentar eliminar un artículo.  Con una configuración básica de administración de artículos, crearemos las acciones  básicas para nuestras tablas Etiquetas y Usuarios .
