@@ -1,27 +1,26 @@
 <?php
-declare(strict_types=1);
-
+// src/Controller/ArticlesController.php
 namespace App\Controller;
 
 use App\Controller\AppController;
+use Cake\Datasource\Paging\NumericPaginator;
 
 class ArticlesController extends AppController
 {
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadComponent('Paginator');
         $this->loadComponent('Flash');
-        $this->loadModel('Tags');
     }
 
     public function index()
     {
-        $articles = $this->Paginator->paginate($this->Articles->find());
+        $paginator = new NumericPaginator();
+        $articles = $paginator->paginate($this->Articles->find(), ['limit' => 10]);
         $this->set(compact('articles'));
     }
 
-    public function view($slug = null)
+    public function view($slug)
     {
         $article = $this->Articles->findBySlug($slug)->firstOrFail();
         $this->set(compact('article'));
@@ -31,31 +30,29 @@ class ArticlesController extends AppController
     {
         $article = $this->Articles->newEmptyEntity();
         if ($this->request->is('post')) {
-            $article = $this->Articles->patchEntity($article, $this->request->getData(), ['associated' => ['Tags']]);
-            $article->user_id = $this->currentUserId();
+            $article = $this->Articles->patchEntity($article, $this->request->getData());
+            $article->user_id = 1;
             if ($this->Articles->save($article)) {
                 $this->Flash->success(__('Your article has been saved.'));
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('Unable to add your article.'));
         }
-        $tags = $this->Tags->find('list');
-        $this->set(compact('article', 'tags'));
+        $this->set('article', $article);
     }
 
     public function edit($slug)
     {
         $article = $this->Articles->findBySlug($slug)->firstOrFail();
         if ($this->request->is(['post', 'put'])) {
-            $this->Articles->patchEntity($article, $this->request->getData(), ['associated' => ['Tags']]);
+            $this->Articles->patchEntity($article, $this->request->getData());
             if ($this->Articles->save($article)) {
                 $this->Flash->success(__('Your article has been updated.'));
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('Unable to update your article.'));
         }
-        $tags = $this->Tags->find('list');
-        $this->set(compact('article', 'tags'));
+        $this->set('article', $article);
     }
 
     public function delete($slug)

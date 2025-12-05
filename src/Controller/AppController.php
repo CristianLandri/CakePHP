@@ -50,19 +50,4 @@ class AppController extends Controller
          */
         //$this->loadComponent('FormProtection');
     }
-
-    /**
-     * Temporary placeholder for current user id.
-     * If there's a session value it returns that, otherwise defaults to 1.
-     */
-    protected function currentUserId(): int
-    {
-        $session = $this->getRequest()->getSession();
-        $userId = $session->read('Auth.User.id');
-        if ($userId) {
-            return (int)$userId;
-        }
-        // default to user 1 for tutorial/demo
-        return 1;
-    }
 }

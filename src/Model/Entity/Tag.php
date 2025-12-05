@@ -1,6 +1,5 @@
 <?php
-declare(strict_types=1);
-
+// src/Model/Entity/Tag.php
 namespace App\Model\Entity;
 
 use Cake\ORM\Entity;

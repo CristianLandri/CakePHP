@@ -1,9 +1,9 @@
 <?php
-declare(strict_types=1);
-
+// src/Controller/TagsController.php
 namespace App\Controller;
 
 use App\Controller\AppController;
+use Cake\Datasource\Paging\NumericPaginator;
 
 class TagsController extends AppController
 {
@@ -15,13 +15,14 @@ class TagsController extends AppController
 
     public function index()
     {
-        $tags = $this->paginate($this->Tags->find());
+        $paginator = new NumericPaginator();
+        $tags = $paginator->paginate($this->Tags->find(), ['limit' => 10]);
         $this->set(compact('tags'));
     }
 
-    public function view($id = null)
+    public function view($id)
     {
-        $tag = $this->Tags->get($id, ['contain' => ['Articles']]);
+        $tag = $this->Tags->get($id);
         $this->set(compact('tag'));
     }
 
@@ -31,26 +32,26 @@ class TagsController extends AppController
         if ($this->request->is('post')) {
             $tag = $this->Tags->patchEntity($tag, $this->request->getData());
             if ($this->Tags->save($tag)) {
-                $this->Flash->success(__('The tag has been saved.'));
+                $this->Flash->success(__('Your tag has been saved.'));
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('Unable to add the tag.'));
+            $this->Flash->error(__('Unable to add your tag.'));
         }
-        $this->set(compact('tag'));
+        $this->set('tag', $tag);
     }
 
-    public function edit($id = null)
+    public function edit($id)
     {
         $tag = $this->Tags->get($id);
         if ($this->request->is(['post', 'put'])) {
             $this->Tags->patchEntity($tag, $this->request->getData());
             if ($this->Tags->save($tag)) {
-                $this->Flash->success(__('The tag has been updated.'));
+                $this->Flash->success(__('Your tag has been updated.'));
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('Unable to update the tag.'));
+            $this->Flash->error(__('Unable to update your tag.'));
         }
-        $this->set(compact('tag'));
+        $this->set('tag', $tag);
     }
 
     public function delete($id)
@@ -59,9 +60,7 @@ class TagsController extends AppController
         $tag = $this->Tags->get($id);
         if ($this->Tags->delete($tag)) {
             $this->Flash->success(__('The tag has been deleted.'));
-        } else {
-            $this->Flash->error(__('Unable to delete the tag.'));
+            return $this->redirect(['action' => 'index']);
         }
-        return $this->redirect(['action' => 'index']);
     }
 }
